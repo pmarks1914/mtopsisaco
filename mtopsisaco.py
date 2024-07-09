@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.linear_model import Ridge
 import logging
+from tqdm import tqdm  # Import tqdm for the progress bar
 from sklearn.neighbors import KNeighborsClassifier
 import wandb
 from skmultilearn.dataset import load_dataset
@@ -111,7 +112,61 @@ class ModifiedACO:
         self.q0 = q0
         self.rho = rho
         self.beta_param = beta_param
-    
+        self.logger = logging.getLogger(__name__)  # Create logger instance
+
+    def cosine_similarity(self, X, y):
+        X_norm = np.linalg.norm(X, axis=0, keepdims=True)
+        y_norm = np.linalg.norm(y, axis=0, keepdims=True)
+
+        if np.any(X_norm == 0) or np.any(y_norm == 0):
+            similarity = np.zeros((X.shape[1], y.shape[1]))
+        else:
+            similarity = np.dot(X.T, y) / (X_norm.T @ y_norm)
+
+        return similarity
+
+    def calculate_correlations(self, X, y):
+        corrf = np.corrcoef(X, rowvar=False)
+        corrl = np.corrcoef(X, y, rowvar=False)[-1, :-1]
+        return corrf, corrl
+
+    def jaccard_similarity(self, X, y):
+        intersection = np.dot(X.T, y)
+        sum_X = X.sum(axis=0)
+        sum_y = y.sum(axis=0)
+        union = sum_X[:, None] + sum_y[None, :] - intersection
+        jaccard = intersection / union
+        return jaccard
+
+    def initialize_pheromone(self, X, y):
+        self.logger.info("Initializing pheromone...")
+        jaccard = self.jaccard_similarity(X, y)
+        pheromone = np.max(jaccard, axis=1)
+        pheromone = (pheromone - np.min(pheromone)) / (np.max(pheromone) - np.min(pheromone))
+        return pheromone
+
+    def select_next_feature(self, pheromone, X, y, visited_features):
+        unvisited_features = [j for j in range(X.shape[1]) if j not in visited_features]
+        q = np.random.uniform()
+        coeff_explore_exploit = (1 * (1 - len(visited_features) / X.shape[1]) ** 0.7)
+        if np.random.beta(90, 10) > coeff_explore_exploit:
+            next_feature = np.random.choice(unvisited_features)
+        else:
+            next_feature_values = [
+                pheromone[j] * np.max(self.cosine_similarity(X[:, j].reshape(-1, 1), y)) ** self.beta_param
+                for j in unvisited_features
+            ]
+            next_feature = unvisited_features[np.argmax(next_feature_values)]
+        return next_feature
+
+    def update_pheromone(self, pheromone, visited_features):
+        for feature in visited_features:
+            pheromone[feature] = (1 - self.rho) * pheromone[feature] + self.rho * np.sum(pheromone)
+        return pheromone
+
+    def normalize_pheromone(self, pheromone):
+        return (pheromone - np.min(pheromone)) / (np.max(pheromone) - np.min(pheromone))
+
     def fit(self, X, y):
         self.logger.info("Fitting ACO model...")
         n_samples, n_features = X.shape
