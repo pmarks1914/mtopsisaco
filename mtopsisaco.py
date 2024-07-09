@@ -113,10 +113,34 @@ class ModifiedACO:
         self.beta_param = beta_param
     
     def fit(self, X, y):
-        # Implement the ACO algorithm here
-        # Placeholder for the selected indices
-        selected_indices = np.random.choice(X.shape[1], self.n_features, replace=False)
-        return selected_indices
+        self.logger.info("Fitting ACO model...")
+        n_samples, n_features = X.shape
+        pheromone = self.initialize_pheromone(X, y)
+        sorted_indices = []
+
+        self.logger.info("Starting ACO fitting.")
+
+        for cycle in tqdm(range(self.no_cycles), desc="Cycles"):
+            self.logger.debug(f"Starting cycle {cycle+1}/{self.no_cycles}")
+            
+            for ant in tqdm(range(self.no_ants), desc="Ants", leave=False):
+                self.logger.debug(f"Ant {ant+1}/{self.no_ants} starting.")
+                visited_features = []
+
+                for _ in tqdm(range(n_features), desc="Features", leave=False):
+                    next_feature = self.select_next_feature(pheromone, X, y, visited_features)
+                    visited_features.append(next_feature)
+                
+                self.logger.debug(f"Ant {ant+1}/{self.no_ants} visited features: {visited_features}")
+                pheromone = self.update_pheromone(pheromone, visited_features)
+            
+            pheromone = self.normalize_pheromone(pheromone)
+            self.logger.debug(f"Cycle {cycle+1}/{self.no_cycles} complete.")
+
+        sorted_indices = np.argsort(-pheromone)
+        self.logger.info("ACO fitting complete.")
+        return sorted_indices[:self.t]
+
 
 
 def load_multilabel_data(dataset_name):
