@@ -94,7 +94,7 @@ def mtopis_feature_ranking(X, y, topf):
     
     return selected_features
 
-def modified_aco_feature_reranking(X, y, selected_features, num_iterations=5, num_ants=5, decay_rate=0.3):
+def modified_aco_feature_reranking(X, y, selected_features, num_iterations=20, num_ants=10, decay_rate=0.3):
     print("Performing Modified ACO feature reranking...")
     print(f"Number of selected features: {len(selected_features)}")
     
@@ -164,7 +164,7 @@ X_train_reduced = X_train[:, optimal_features]
 X_test_reduced = X_test[:, optimal_features]
 
 # Train KNeighborsClassifier on the reduced dataset
-knn = KNeighborsClassifier(n_neighbors=3)
+knn = KNeighborsClassifier(n_neighbors=9)
 
 # Add feature scaling before training the model:
 scaler = StandardScaler()
