@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 # Initialize W&B project
-wandb.init(project="ML-TOPSIS-ACO-SMALL", name="bibtex-ml-classification")
+wandb.init(project="ML-TOPSIS-ACO-SMALL-RVM", name="bibtex-ml-classification")
 
 print("Loading dataset...")
 # Load the BibTeX dataset (train and test variants)
@@ -70,7 +70,7 @@ def mtopis_feature_ranking(X, y, topf):
 
     return selected_features
 
-def modified_aco_feature_reranking(X, y, selected_features, num_iterations=50, num_ants=5, decay_rate=0.3):
+def modified_aco_feature_reranking(X, y, selected_features, num_iterations=5, num_ants=5, decay_rate=0.3):
     print("Performing Modified ACO feature reranking...")
     pheromones = np.ones(len(selected_features))
     best_features = selected_features.copy()
