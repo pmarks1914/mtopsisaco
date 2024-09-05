@@ -87,7 +87,7 @@ def mtopis_feature_ranking(X, y, topf):
     
     return selected_features
 
-def modified_aco_feature_reranking(X, y, selected_features, num_iterations=3, num_ants=10, decay_rate=0.3):
+def modified_aco_feature_reranking(X, y, selected_features, num_iterations=10, num_ants=10, decay_rate=0.3):
     print("Performing Modified ACO feature reranking...")
     print(f"Number of selected features: {len(selected_features)}")
     
@@ -190,8 +190,8 @@ average_precision = average_precision_score(y_test, predictions, average='sample
 hamming_loss_score = hamming_loss(y_test, predictions)
 
 print(f"Accuracy of the model: {accuracy * 100:.2f}%")
-print(f"Hamming Loss: {hamming_loss_score * 100:.4f}%")
-print(f"Average Precision score: {average_precision:.2f}")
+print(f"Hamming Loss: {hamming_loss_score * 100:.2f}%")
+print(f"Average Precision score: {average_precision * 100:.2f}")
 
 # Log metrics to Weights & Biases
 wandb.log({
