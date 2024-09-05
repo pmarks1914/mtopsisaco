@@ -109,7 +109,8 @@ def modified_aco_feature_reranking(X, y, selected_features, num_iterations=5, nu
             ant_features = np.random.choice(selected_features, subset_size, p=pheromones/sum(pheromones), replace=False)
             
             # Evaluate the subset
-            knn = KNeighborsClassifier(n_neighbors=3)
+            # knn = KNeighborsClassifier(n_neighbors=3)
+            knn = MLkNN(k=3)
             knn.fit(X[:, ant_features], y)
             score = accuracy_score(y, knn.predict(X[:, ant_features]))
             
@@ -160,9 +161,8 @@ X_train_reduced = X_train[:, optimal_features]
 X_test_reduced = X_test[:, optimal_features]
 
 # Train KNeighborsClassifier on the reduced dataset
-# knn = KNeighborsClassifier(n_neighbors=9)
-
-knn = MultiOutputClassifier(RandomForestClassifier(n_estimators=100, random_state=42))
+knn = MLkNN(k=9)
+# knn = MultiOutputClassifier(RandomForestClassifier(n_estimators=100, random_state=42))
 
 # Add feature scaling before training the model:
 scaler = StandardScaler()
