@@ -1,4 +1,4 @@
-
+from skmultilearn.adapt import MLkNN
 import wandb
 import numpy as np
 import random
@@ -6,14 +6,13 @@ from scipy.stats import beta
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import normalize
 from sklearn.metrics import accuracy_score, hamming_loss, average_precision_score
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 from skmultilearn.dataset import load_dataset
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 from sklearn.preprocessing import StandardScaler
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.ensemble import RandomForestClassifier
-from skmultilearn.adapt import MLkNN
 
 # Initialize W&B project
 wandb.init(project="ML-TOPSIS-ACO-SMALL-RVM", name="bibtex-ml-classification")
@@ -109,7 +108,6 @@ def modified_aco_feature_reranking(X, y, selected_features, num_iterations=5, nu
             ant_features = np.random.choice(selected_features, subset_size, p=pheromones/sum(pheromones), replace=False)
             
             # Evaluate the subset
-            # knn = KNeighborsClassifier(n_neighbors=3)
             knn = MLkNN(k=3)
             knn.fit(X[:, ant_features], y)
             score = accuracy_score(y, knn.predict(X[:, ant_features]))
@@ -184,26 +182,23 @@ from sklearn.multioutput import MultiOutputClassifier
 from sklearn.ensemble import RandomForestClassifier
 
 rf = MultiOutputClassifier(RandomForestClassifier(n_estimators=100, random_state=42))
-rf.fit(X_train_scaled, y_train)
-predictions = rf.predict(X_test_scaled)
-
+rf.fit(X_train_reduced, y_train)
+predictions = rf.predict(X_test_reduced)
 """
+
 print("Evaluating model...")
-# Evaluate the model using Accuracy and Hamming Loss
+
+# Compute accuracy
 accuracy = accuracy_score(y_test, predictions)
-average_precision = average_precision_score(y_test, predictions, average='samples')
-hamming_loss_score = hamming_loss(y_test, predictions)
+hamming_loss_val = hamming_loss(y_test, predictions)
+average_precision = average_precision_score(y_test, predictions.toarray(), average='samples')
 
-print(f"Accuracy of the model: {accuracy * 100:.2f}%")
-print(f"Hamming Loss: {hamming_loss_score * 100:.2f}%")
-print(f"Average Precision score: {average_precision * 100:.2f}")
+# Log metrics to W&B
+wandb.log({"accuracy": accuracy, "hamming_loss": hamming_loss_val, "average_precision": average_precision})
 
-# Log metrics to Weights & Biases
-wandb.log({
-    "accuracy": accuracy,
-    "hamming_loss": hamming_loss_score,
-    "average_precision": average_precision
-})
+print(f"Test accuracy: {accuracy:.4f}")
+print(f"Hamming Loss: {hamming_loss_val:.4f}")
+print(f"Average Precision: {average_precision:.4f}")
 
-print("Done!")
-
+print("Feature selection and model training complete.")
+wandb.finish()
