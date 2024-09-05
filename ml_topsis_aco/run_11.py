@@ -6,11 +6,13 @@ from scipy.stats import beta
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import normalize
 from sklearn.metrics import accuracy_score, hamming_loss, average_precision_score
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neighbors import KNeighborsClassifier, kn
 from skmultilearn.dataset import load_dataset
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 from sklearn.preprocessing import StandardScaler
+from sklearn.multioutput import MultiOutputClassifier
+from sklearn.ensemble import RandomForestClassifier
 
 # Initialize W&B project
 wandb.init(project="ML-TOPSIS-ACO-SMALL-RVM", name="bibtex-ml-classification")
@@ -87,7 +89,7 @@ def mtopis_feature_ranking(X, y, topf):
     
     return selected_features
 
-def modified_aco_feature_reranking(X, y, selected_features, num_iterations=10, num_ants=10, decay_rate=0.3):
+def modified_aco_feature_reranking(X, y, selected_features, num_iterations=5, num_ants=10, decay_rate=0.3):
     print("Performing Modified ACO feature reranking...")
     print(f"Number of selected features: {len(selected_features)}")
     
@@ -157,7 +159,9 @@ X_train_reduced = X_train[:, optimal_features]
 X_test_reduced = X_test[:, optimal_features]
 
 # Train KNeighborsClassifier on the reduced dataset
-knn = KNeighborsClassifier(n_neighbors=9)
+# knn = KNeighborsClassifier(n_neighbors=9)
+
+knn = MultiOutputClassifier(RandomForestClassifier(n_estimators=100, random_state=42))
 
 # Add feature scaling before training the model:
 scaler = StandardScaler()
@@ -169,9 +173,9 @@ X_test_scaled = scaler.transform(X_test_reduced)
 print("Making predictions...")
 # Predict on the test set
 # predictions = knn.predict(X_test_reduced)
-
 knn.fit(X_train_scaled, y_train)
 predictions = knn.predict(X_test_scaled)
+
 
 """
 Try a different classifier, such as Random Forest, which might handle the multi-label classification better:

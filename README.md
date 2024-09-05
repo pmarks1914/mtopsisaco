@@ -46,10 +46,10 @@ ssh -o 'proxycommand socat - PROXY:18.157.151.201:%h:%p,proxyport=6000' -o Prefe
 ## Server Access
 ```sh
 # OLd server
- ssh -o 'proxycommand socat - PROXY:18.157.151.201:%h:%p,proxyport=6000' -o PreferredAuthentications=password disal@webserve.appatechlab.com 
+ssh -o 'proxycommand socat - PROXY:18.157.151.201:%h:%p,proxyport=6000' -o PreferredAuthentications=password disal@webserve.appatechlab.com 
 
  # New server
-  ssh -o 'proxycommand socat - PROXY:18.157.151.201:%h:%p,proxyport=6000' -o PreferredAuthentications=password disal2@mlserve.appatechlab.com 
+ssh -o 'proxycommand socat - PROXY:18.157.151.201:%h:%p,proxyport=6000' -o PreferredAuthentications=password disal2@mlserve.appatechlab.com 
 ```
 
 ## Helper Commands
