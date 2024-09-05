@@ -96,7 +96,7 @@ def mtopis_feature_ranking(X, y, topf):
     
     return selected_features
 
-def modified_aco_feature_reranking(X, y, selected_features, num_iterations=5, num_ants=10, decay_rate=0.3):
+def modified_aco_feature_reranking(X, y, selected_features, num_iterations=10, num_ants=20, decay_rate=0.3):
     """Perform Modified ACO feature reranking.
     
     Args:
@@ -127,15 +127,15 @@ def modified_aco_feature_reranking(X, y, selected_features, num_iterations=5, nu
             subset_size = random.randint(max(2, len(selected_features) // 10), max(3, len(selected_features) // 2))
             ant_features = np.random.choice(selected_features, subset_size, p=pheromones/sum(pheromones), replace=False)
             
-            # # Evaluate the subset using MLkNN classifier
-            # knn = MLkNN(k=3)
-            # knn.fit(X[:, ant_features], y)
-            # score = accuracy_score(y, knn.predict(X[:, ant_features]))
-            
-            # Use KNeighborsClassifier instead of MLkNN
-            knn = KNeighborsClassifier(n_neighbors=3)
+            # Evaluate the subset using MLkNN classifier
+            knn = MLkNN(k=9)
             knn.fit(X[:, ant_features], y)
             score = accuracy_score(y, knn.predict(X[:, ant_features]))
+            
+            # # Use KNeighborsClassifier instead of MLkNN
+            # knn = KNeighborsClassifier(n_neighbors=3)
+            # knn.fit(X[:, ant_features], y)
+            # score = accuracy_score(y, knn.predict(X[:, ant_features]))
             
             # Update best solution if necessary
             if score > best_score:
@@ -208,21 +208,30 @@ print("Evaluating the model...")
 
 # Evaluate the model using various metrics
 accuracy = accuracy_score(y_test, predictions)
-hamming = hamming_loss(y_test, predictions)
+hamming_loss_score = hamming_loss(y_test, predictions)
 average_precision = average_precision_score(y_test, predictions.toarray())
 
-print(f"Model accuracy: {accuracy}")
-print(f"Model hamming loss: {hamming}")
-print(f"Model average precision: {average_precision}")
+print(f"Accuracy of the model: {accuracy * 100:.2f}%")
+print(f"Hamming Loss: {hamming_loss_score * 100:.2f}%")
+print(f"Average Precision score: {average_precision * 100:.2f}")
+
 
 # Log metrics to W&B
 wandb.log({
     "accuracy": accuracy,
-    "hamming_loss": hamming,
+    "hamming_loss": hamming_loss_score,
     "average_precision": average_precision
 })
 
 print("Run complete.")
+
+# Plot Feature Importance based on Pheromone Values
+plt.figure(figsize=(10, 6))
+plt.bar(range(len(optimal_features)), final_pheromones)
+plt.title("Feature Importance based on Pheromone Values")
+plt.xlabel("Feature Index")
+plt.ylabel("Pheromone Value")
+wandb.log({"Feature Importance": wandb.Image(plt)})
 
 # Close the W&B run
 wandb.finish()
