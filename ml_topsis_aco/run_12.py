@@ -1,18 +1,15 @@
-from skmultilearn.adapt import MLkNN
 import wandb
 import numpy as np
 import random
 from scipy.stats import beta
 from sklearn.linear_model import Ridge
-from sklearn.preprocessing import normalize
+from sklearn.preprocessing import normalize, StandardScaler
 from sklearn.metrics import accuracy_score, hamming_loss, average_precision_score
-from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
+from sklearn.neighbors import KNeighborsClassifier
 from skmultilearn.dataset import load_dataset
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-from sklearn.preprocessing import StandardScaler
-from sklearn.multioutput import MultiOutputClassifier
-from sklearn.ensemble import RandomForestClassifier
+from skmultilearn.adapt import MLkNN
 
 # Initialize W&B project
 wandb.init(project="ML-TOPSIS-ACO-SMALL-RVM", name="bibtex-ml-classification")
@@ -35,6 +32,16 @@ y_test = y_test.toarray() if not isinstance(y_test, np.ndarray) else y_test
 print("Preprocessing data...")
 
 def mtopis_feature_ranking(X, y, topf):
+    """Perform MTOPSIS feature ranking.
+    
+    Args:
+        X (np.ndarray): Feature matrix.
+        y (np.ndarray): Label matrix.
+        topf (int): Number of top features to select.
+        
+    Returns:
+        np.ndarray: Indices of selected features.
+    """
     print("Performing MTOPSIS feature ranking...")
     print(f"Input shape: X={X.shape}, y={y.shape}")
     
@@ -90,6 +97,19 @@ def mtopis_feature_ranking(X, y, topf):
     return selected_features
 
 def modified_aco_feature_reranking(X, y, selected_features, num_iterations=5, num_ants=10, decay_rate=0.3):
+    """Perform Modified ACO feature reranking.
+    
+    Args:
+        X (np.ndarray): Feature matrix.
+        y (np.ndarray): Label matrix.
+        selected_features (np.ndarray): Initial selected features.
+        num_iterations (int): Number of iterations.
+        num_ants (int): Number of ants.
+        decay_rate (float): Decay rate of pheromones.
+        
+    Returns:
+        tuple: Optimized features and final pheromones.
+    """
     print("Performing Modified ACO feature reranking...")
     print(f"Number of selected features: {len(selected_features)}")
     
@@ -107,7 +127,7 @@ def modified_aco_feature_reranking(X, y, selected_features, num_iterations=5, nu
             subset_size = random.randint(max(2, len(selected_features) // 10), max(3, len(selected_features) // 2))
             ant_features = np.random.choice(selected_features, subset_size, p=pheromones/sum(pheromones), replace=False)
             
-            # Evaluate the subset
+            # Evaluate the subset using MLkNN classifier
             knn = MLkNN(k=3)
             knn.fit(X[:, ant_features], y)
             score = accuracy_score(y, knn.predict(X[:, ant_features]))
@@ -117,16 +137,16 @@ def modified_aco_feature_reranking(X, y, selected_features, num_iterations=5, nu
                 best_score = score
                 best_features = ant_features
             
-            # Update pheromones
+            # Update pheromones based on the score
             pheromones[np.isin(selected_features, ant_features)] += score
         
-        # Apply decay
+        # Apply decay to pheromones
         pheromones *= (1 - decay_rate)
 
     print(f"Number of features selected by ACO: {len(best_features)}")
     print(f"Top 5 feature indices: {best_features[:5]}")
     
-    # After the ACO iterations
+    # After the ACO iterations, sort the pheromones
     final_pheromones = pheromones[np.argsort(-pheromones)][:len(best_features)]
     
     return best_features, final_pheromones
@@ -148,6 +168,7 @@ print(f"Std of y_train: {np.std(y_train)}")
 print(f"Min of y_train: {np.min(y_train)}")
 print(f"Max of y_train: {np.max(y_train)}")
 
+# MTOPSIS feature ranking
 selected_features = mtopis_feature_ranking(X_train, y_train, topf)
 
 # Apply Modified-ACO for feature re-ranking
@@ -158,47 +179,45 @@ print("Feature selection complete. Training model...")
 X_train_reduced = X_train[:, optimal_features]
 X_test_reduced = X_test[:, optimal_features]
 
-# Train KNeighborsClassifier on the reduced dataset
+# Train MLkNN on the reduced dataset
 knn = MLkNN(k=9)
-# knn = MultiOutputClassifier(RandomForestClassifier(n_estimators=100, random_state=42))
 
 # Add feature scaling before training the model:
 scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train_reduced)
 X_test_scaled = scaler.transform(X_test_reduced)
 
-# knn.fit(X_train_reduced, y_train)
+# Fit the model on scaled training data
+knn.fit(X_train_scaled, y_train)
 
 print("Making predictions...")
 # Predict on the test set
-# predictions = knn.predict(X_test_reduced)
-knn.fit(X_train_scaled, y_train)
 predictions = knn.predict(X_test_scaled)
 
+# Alternative classifier example:
+# rf = MultiOutputClassifier(RandomForestClassifier(n_estimators=100, random_state=42))
+# rf.fit(X_train_scaled, y_train)
+# predictions = rf.predict(X_test_scaled)
 
-"""
-Try a different classifier, such as Random Forest, which might handle the multi-label classification better:
-from sklearn.multioutput import MultiOutputClassifier
-from sklearn.ensemble import RandomForestClassifier
+print("Evaluating the model...")
 
-rf = MultiOutputClassifier(RandomForestClassifier(n_estimators=100, random_state=42))
-rf.fit(X_train_reduced, y_train)
-predictions = rf.predict(X_test_reduced)
-"""
-
-print("Evaluating model...")
-
-# Compute accuracy
+# Evaluate the model using various metrics
 accuracy = accuracy_score(y_test, predictions)
-hamming_loss_val = hamming_loss(y_test, predictions)
-average_precision = average_precision_score(y_test, predictions.toarray(), average='samples')
+hamming = hamming_loss(y_test, predictions)
+average_precision = average_precision_score(y_test, predictions.toarray())
+
+print(f"Model accuracy: {accuracy}")
+print(f"Model hamming loss: {hamming}")
+print(f"Model average precision: {average_precision}")
 
 # Log metrics to W&B
-wandb.log({"accuracy": accuracy, "hamming_loss": hamming_loss_val, "average_precision": average_precision})
+wandb.log({
+    "accuracy": accuracy,
+    "hamming_loss": hamming,
+    "average_precision": average_precision
+})
 
-print(f"Test accuracy: {accuracy:.4f}")
-print(f"Hamming Loss: {hamming_loss_val:.4f}")
-print(f"Average Precision: {average_precision:.4f}")
+print("Run complete.")
 
-print("Feature selection and model training complete.")
+# Close the W&B run
 wandb.finish()
