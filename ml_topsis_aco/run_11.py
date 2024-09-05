@@ -1,3 +1,4 @@
+
 import wandb
 import numpy as np
 import random
@@ -7,11 +8,9 @@ from sklearn.preprocessing import normalize
 from sklearn.metrics import accuracy_score, hamming_loss, average_precision_score
 from sklearn.neighbors import KNeighborsClassifier
 from skmultilearn.dataset import load_dataset
-from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 from sklearn.preprocessing import StandardScaler
-
 
 # Initialize W&B project
 wandb.init(project="ML-TOPSIS-ACO-SMALL-RVM", name="bibtex-ml-classification")
@@ -32,12 +31,6 @@ X_test = X_test.toarray() if not isinstance(X_test, np.ndarray) else X_test
 y_test = y_test.toarray() if not isinstance(y_test, np.ndarray) else y_test
 
 print("Preprocessing data...")
-# Combine train and test data for unified processing
-X = np.vstack((X_train, X_test))
-y = np.vstack((y_train, y_test))
-
-# Split the combined data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.10, random_state=42)
 
 def mtopis_feature_ranking(X, y, topf):
     print("Performing MTOPSIS feature ranking...")
@@ -94,7 +87,7 @@ def mtopis_feature_ranking(X, y, topf):
     
     return selected_features
 
-def modified_aco_feature_reranking(X, y, selected_features, num_iterations=20, num_ants=10, decay_rate=0.3):
+def modified_aco_feature_reranking(X, y, selected_features, num_iterations=3, num_ants=10, decay_rate=0.3):
     print("Performing Modified ACO feature reranking...")
     print(f"Number of selected features: {len(selected_features)}")
     
@@ -198,25 +191,13 @@ hamming_loss_score = hamming_loss(y_test, predictions)
 
 print(f"Accuracy of the model: {accuracy * 100:.2f}%")
 print(f"Hamming Loss: {hamming_loss_score * 100:.4f}%")
-print(f"Average Precision score: {average_precision * 100:.4f}%")
-print(f"Number of selected features: {len(optimal_features)}")
+print(f"Average Precision score: {average_precision:.2f}")
 
-# Log the results to W&B
+# Log metrics to Weights & Biases
 wandb.log({
-    "Accuracy": accuracy,
-    "Hamming Loss": hamming_loss_score,
-    "Average Precision": average_precision,
-    "Number of Selected Features": len(optimal_features)
+    "accuracy": accuracy,
+    "hamming_loss": hamming_loss_score,
+    "average_precision": average_precision
 })
 
-# Plot Feature Importance based on Pheromone Values
-plt.figure(figsize=(10, 6))
-plt.bar(range(len(optimal_features)), final_pheromones)
-plt.title("Feature Importance based on Pheromone Values")
-plt.xlabel("Feature Index")
-plt.ylabel("Pheromone Value")
-wandb.log({"Feature Importance": wandb.Image(plt)})
-
-# End the WandB run
-wandb.finish()
-
+print("Done!")
