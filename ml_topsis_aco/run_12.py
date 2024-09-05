@@ -127,8 +127,13 @@ def modified_aco_feature_reranking(X, y, selected_features, num_iterations=5, nu
             subset_size = random.randint(max(2, len(selected_features) // 10), max(3, len(selected_features) // 2))
             ant_features = np.random.choice(selected_features, subset_size, p=pheromones/sum(pheromones), replace=False)
             
-            # Evaluate the subset using MLkNN classifier
-            knn = MLkNN(k=3)
+            # # Evaluate the subset using MLkNN classifier
+            # knn = MLkNN(k=3)
+            # knn.fit(X[:, ant_features], y)
+            # score = accuracy_score(y, knn.predict(X[:, ant_features]))
+            
+            # Use KNeighborsClassifier instead of MLkNN
+            knn = KNeighborsClassifier(n_neighbors=3)
             knn.fit(X[:, ant_features], y)
             score = accuracy_score(y, knn.predict(X[:, ant_features]))
             
