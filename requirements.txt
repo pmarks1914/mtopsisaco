@@ -24,7 +24,6 @@ joblib==1.4.2
 jupyter_client==8.6.2
 jupyter_core==5.7.2
 kiwisolver==1.4.5
-liac-arff==2.5.0
 llvmlite==0.43.0
 matplotlib==3.9.2
 matplotlib-inline==0.1.7
@@ -36,6 +35,7 @@ pandas==2.2.2
 parso==0.8.4
 pexpect==4.9.0
 pillow==10.4.0
+pip-autoremove==0.10.0
 platformdirs==4.2.2
 prompt_toolkit==3.0.47
 protobuf==5.27.1
@@ -50,7 +50,6 @@ PyYAML==6.0.1
 pyzmq==26.2.0
 requests==2.32.3
 scikit-learn==1.5.0
-scikit-multilearn==0.2.0
 scipy==1.13.1
 seaborn==0.13.2
 sentry-sdk==2.6.0

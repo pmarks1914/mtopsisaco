@@ -52,6 +52,12 @@ ssh -o 'proxycommand socat - PROXY:18.157.151.201:%h:%p,proxyport=6000' -o Prefe
 ssh -o 'proxycommand socat - PROXY:18.157.151.201:%h:%p,proxyport=6000' -o PreferredAuthentications=password disal2@mlserve.appatechlab.com 
 ```
 
+## Scikit-Multilearn Fix
+```sh
+pip install git+https://github.com/sharhan-alhassan/scikit-multilearn.git@base
+
+```
+
 ## Helper Commands
 ```sh
 # Check Memory & CPU consumption
