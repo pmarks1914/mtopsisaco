@@ -32,6 +32,22 @@ Update pheromone levels based on the performance of feature subsets (better subs
 After a certain number of iterations or when convergence is achieved, select the feature subset with the highest performance.
 Use this subset for the final multi-label classification model.
 ```
+
+### OTHER ALGORITHMS TO MEASURE AGAINST
+```sh
+1. ELACHi
+2. PPTCHi
+3. RFML
+4. FIFM
+5. MFS-MCDM
+6. MTOPSIS
+7. MLACO
+8. Guided-MLACO
+9. Ant-TD
+10. MGFS
+11. MLPSO
+12. ** ML-TOPSIS-ACO
+```
 ## SET UP
 
 ```sh

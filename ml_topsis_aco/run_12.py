@@ -96,7 +96,7 @@ def mtopis_feature_ranking(X, y, topf):
     
     return selected_features
 
-def modified_aco_feature_reranking(X, y, selected_features, num_iterations=20, num_ants=40, decay_rate=0.3):
+def modified_aco_feature_reranking(X, y, selected_features, num_iterations=5, num_ants=40, decay_rate=0.3):
     """Perform Modified ACO feature reranking.
     
     Args:
