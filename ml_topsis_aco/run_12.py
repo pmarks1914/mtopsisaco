@@ -4,7 +4,11 @@ import random
 from scipy.stats import beta
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import normalize, StandardScaler
-from sklearn.metrics import accuracy_score, hamming_loss, average_precision_score
+from sklearn.metrics import (
+    accuracy_score, 
+    hamming_loss, 
+    average_precision_score,
+)
 from sklearn.neighbors import KNeighborsClassifier
 from skmultilearn.dataset import load_dataset
 import matplotlib.pyplot as plt
@@ -128,7 +132,7 @@ def modified_aco_feature_reranking(X, y, selected_features, num_iterations=5, nu
             ant_features = np.random.choice(selected_features, subset_size, p=pheromones/sum(pheromones), replace=False)
             
             # Evaluate the subset using MLkNN classifier
-            knn = MLkNN(k=9)
+            knn = MLkNN(k=20)
             knn.fit(X[:, ant_features], y)
             score = accuracy_score(y, knn.predict(X[:, ant_features]))
             
@@ -158,7 +162,7 @@ def modified_aco_feature_reranking(X, y, selected_features, num_iterations=5, nu
 
 print("Starting feature selection...")
 # Apply MTOPSIS for initial feature selection
-topf = max(100, int(0.30 * X_train.shape[1]))  # Increased from 0.20 to 0.30
+topf = max(100, int(0.10 * X_train.shape[1]))  # Increased from 0.20 to 0.30
 print(f"Selecting top {topf} features")
 
 print("Feature statistics:")
@@ -175,9 +179,11 @@ print(f"Max of y_train: {np.max(y_train)}")
 
 # MTOPSIS feature ranking
 selected_features = mtopis_feature_ranking(X_train, y_train, topf)
+print(f"Final selected features: {selected_features}")
 
 # Apply Modified-ACO for feature re-ranking
 optimal_features, final_pheromones = modified_aco_feature_reranking(X_train, y_train, selected_features)
+print(f"Final optimal features: {optimal_features}")
 
 print("Feature selection complete. Training model...")
 # Reduce the training and testing data based on optimal features
@@ -185,7 +191,7 @@ X_train_reduced = X_train[:, optimal_features]
 X_test_reduced = X_test[:, optimal_features]
 
 # Train MLkNN on the reduced dataset
-knn = MLkNN(k=9)
+knn = MLkNN(k=20)
 
 # Add feature scaling before training the model:
 scaler = StandardScaler()
