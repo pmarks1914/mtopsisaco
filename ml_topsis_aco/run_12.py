@@ -221,7 +221,7 @@ average_precision = average_precision_score(y_test, predictions.toarray())
 
 # coverage = coverage_error(y_test, predictions)
 coverage = coverage_error(y_test, predictions.toarray())
-ranking_loss_score = label_ranking_loss(y_test, predictions)
+ranking_loss_score = label_ranking_loss(y_test, predictions.toarray())
 
 # Calculate one-error
 one_error = np.mean([
