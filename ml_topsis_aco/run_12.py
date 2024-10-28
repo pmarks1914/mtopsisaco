@@ -8,6 +8,8 @@ from sklearn.metrics import (
     accuracy_score, 
     hamming_loss, 
     average_precision_score,
+    coverage_error, 
+    label_ranking_loss
 )
 from sklearn.neighbors import KNeighborsClassifier
 from skmultilearn.dataset import load_dataset
@@ -132,7 +134,7 @@ def modified_aco_feature_reranking(X, y, selected_features, num_iterations=5, nu
             ant_features = np.random.choice(selected_features, subset_size, p=pheromones/sum(pheromones), replace=False)
             
             # Evaluate the subset using MLkNN classifier
-            knn = MLkNN(k=20)
+            knn = MLkNN(k=70)
             knn.fit(X[:, ant_features], y)
             score = accuracy_score(y, knn.predict(X[:, ant_features]))
             
@@ -162,7 +164,7 @@ def modified_aco_feature_reranking(X, y, selected_features, num_iterations=5, nu
 
 print("Starting feature selection...")
 # Apply MTOPSIS for initial feature selection
-topf = max(100, int(0.10 * X_train.shape[1]))  # Increased from 0.20 to 0.30
+topf = max(50, int(0.05 * X_train.shape[1]))  # Increased from 0.20 to 0.30
 print(f"Selecting top {topf} features")
 
 print("Feature statistics:")
@@ -190,8 +192,8 @@ print("Feature selection complete. Training model...")
 X_train_reduced = X_train[:, optimal_features]
 X_test_reduced = X_test[:, optimal_features]
 
-# Train MLkNN on the reduced dataset
-knn = MLkNN(k=20)
+# Train MLkNN on the reduced dataset -- make k the sqrt(N = Total data points)
+knn = MLkNN(k=70)
 
 # Add feature scaling before training the model:
 scaler = StandardScaler()
@@ -217,27 +219,29 @@ accuracy = accuracy_score(y_test, predictions)
 hamming_loss_score = hamming_loss(y_test, predictions)
 average_precision = average_precision_score(y_test, predictions.toarray())
 
-print(f"Accuracy of the model: {accuracy * 100:.2f}%")
-print(f"Hamming Loss: {hamming_loss_score * 100:.2f}%")
-print(f"Average Precision score: {average_precision * 100:.2f}%")
+coverage = coverage_error(y_test, predictions)
+ranking_loss_score = label_ranking_loss(y_test, predictions)
 
+# Calculate one-error
+one_error = np.mean([
+    1 - np.any(pred == true) for pred, true in zip(predictions, y_test)
+])
+
+print(f"Accuracy: {accuracy * 100:.2f}%")
+print(f"Hamming Loss: {hamming_loss_score * 100:.2f}%")
+print(f"Average Precision: {average_precision * 100:.2f}%")
+print(f"Coverage Error: {coverage:.2f}")
+print(f"Ranking Loss: {ranking_loss_score:.2f}")
+print(f"One Error: {one_error:.2f}")
 
 # Log metrics to W&B
 wandb.log({
     "accuracy": accuracy,
     "hamming_loss": hamming_loss_score,
-    "average_precision": average_precision
+    "average_precision": average_precision,
+    "coverage_error": coverage,
+    "ranking_loss": ranking_loss_score,
+    "one_error": one_error
 })
 
-print("Run complete.")
-
-# Plot Feature Importance based on Pheromone Values
-plt.figure(figsize=(10, 6))
-plt.bar(range(len(optimal_features)), final_pheromones)
-plt.title("Feature Importance based on Pheromone Values")
-plt.xlabel("Feature Index")
-plt.ylabel("Pheromone Value")
-wandb.log({"Feature Importance": wandb.Image(plt)})
-
-# Close the W&B run
-wandb.finish()
+print("Done!")
