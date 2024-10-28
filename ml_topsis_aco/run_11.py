@@ -5,7 +5,7 @@ import random
 from scipy.stats import beta
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import normalize
-from sklearn.metrics import accuracy_score, hamming_loss, average_precision_score
+from sklearn.metrics import accuracy_score, hamming_loss, average_precision_score, coverage_error, label_ranking_loss
 from sklearn.neighbors import KNeighborsClassifier
 from skmultilearn.dataset import load_dataset
 import matplotlib.pyplot as plt
@@ -194,15 +194,30 @@ accuracy = accuracy_score(y_test, predictions)
 average_precision = average_precision_score(y_test, predictions, average='samples')
 hamming_loss_score = hamming_loss(y_test, predictions)
 
-print(f"Accuracy of the model: {accuracy * 100:.2f}%")
-print(f"Hamming Loss: {hamming_loss_score * 100:.2f}%")
-print(f"Average Precision score: {average_precision * 100:.2f}")
+coverage = coverage_error(y_test, predictions)
+ranking_loss_score = label_ranking_loss(y_test, predictions)
 
-# Log metrics to Weights & Biases
+# Calculate one-error
+one_error = np.mean([
+    1 - np.any(pred == true) for pred, true in zip(predictions, y_test)
+])
+
+print(f"Accuracy: {accuracy * 100:.2f}%")
+print(f"Hamming Loss: {hamming_loss_score * 100:.2f}%")
+print(f"Average Precision: {average_precision * 100:.2f}%")
+print(f"Coverage Error: {coverage:.2f}")
+print(f"Ranking Loss: {ranking_loss_score:.2f}")
+print(f"One Error: {one_error:.2f}")
+
+# Log metrics to W&B
 wandb.log({
     "accuracy": accuracy,
     "hamming_loss": hamming_loss_score,
-    "average_precision": average_precision
+    "average_precision": average_precision,
+    "coverage_error": coverage,
+    "ranking_loss": ranking_loss_score,
+    "one_error": one_error
 })
 
 print("Done!")
+

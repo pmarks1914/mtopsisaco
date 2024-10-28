@@ -80,3 +80,11 @@ pip install git+https://github.com/sharhan-alhassan/scikit-multilearn.git@base
 top -l 1 | grep -E "^CPU|^Phys"
 
 ```
+
+## Data Intepretation
+```sh
+# Total data set -- 7395
+# Test data -- 2515 (34%)
+# Train data -- 4880 (66%)
+
+```

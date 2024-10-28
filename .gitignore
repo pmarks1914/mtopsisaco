@@ -4,3 +4,6 @@
 /classifier
 /google
 /optimizations
+bibtex_*
+test_*
+matlab/*
