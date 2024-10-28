@@ -219,7 +219,8 @@ accuracy = accuracy_score(y_test, predictions)
 hamming_loss_score = hamming_loss(y_test, predictions)
 average_precision = average_precision_score(y_test, predictions.toarray())
 
-coverage = coverage_error(y_test, predictions)
+# coverage = coverage_error(y_test, predictions)
+coverage = coverage_error(y_test, predictions.toarray())
 ranking_loss_score = label_ranking_loss(y_test, predictions)
 
 # Calculate one-error

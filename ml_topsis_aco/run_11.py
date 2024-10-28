@@ -134,7 +134,7 @@ def modified_aco_feature_reranking(X, y, selected_features, num_iterations=5, nu
 
 print("Starting feature selection...")
 # Apply MTOPSIS for initial feature selection
-topf = max(50, int(0.10 * X_train.shape[1]))  # Increased from 0.20 to 0.30
+topf = max(50, int(0.05 * X_train.shape[1]))  # Increased from 0.20 to 0.30
 print(f"Selecting top {topf} features")
 
 print("Feature statistics:")
