@@ -383,7 +383,7 @@ def main(dataset_name):
         try:
             # Initialize a new wandb run
             logging.info("Initializing a new wandb run...")
-            wandb.init(project="your_project_name")  # Specify your project name if needed
+            wandb.init(project="mtopsis-algorithm")  # Specify your project name if needed
             logging.info("wandb run initialized.")
 
             # Log metrics

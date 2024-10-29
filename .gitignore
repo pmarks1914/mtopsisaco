@@ -1,2 +1,9 @@
 /venv
 /wandb
+/sandbox
+/classifier
+/google
+/optimizations
+bibtex_*
+test_*
+matlab/*
