@@ -134,7 +134,7 @@ def modified_aco_feature_reranking(X, y, selected_features, num_iterations=5, nu
             ant_features = np.random.choice(selected_features, subset_size, p=pheromones/sum(pheromones), replace=False)
             
             # Evaluate the subset using MLkNN classifier
-            knn = MLkNN(k=70)
+            knn = MLkNN(k=15)
             knn.fit(X[:, ant_features], y)
             score = accuracy_score(y, knn.predict(X[:, ant_features]))
             
@@ -193,7 +193,7 @@ X_train_reduced = X_train[:, optimal_features]
 X_test_reduced = X_test[:, optimal_features]
 
 # Train MLkNN on the reduced dataset -- make k the sqrt(N = Total data points)
-knn = MLkNN(k=70)
+knn = MLkNN(k=15)
 
 # Add feature scaling before training the model:
 scaler = StandardScaler()
